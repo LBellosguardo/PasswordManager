@@ -1,4 +1,6 @@
 import sys
+import random
+import string
 
 MASTER = '123'
 
@@ -11,6 +13,15 @@ while connect != MASTER:
         sys.exit()
     connect = input('Please enter your master password or q to quit\n')
     
+def generate_password(length=16, special=True):
+    password = ""
+    characters = string.ascii_letters + string.digits
+    if special:
+        characters += '!@#$%^&*'
+    for i in range(length):
+        password += random.choice(characters)
+    return password
+
 if connect == MASTER:
     # Main menu loop
     while True:
@@ -31,4 +42,5 @@ if connect == MASTER:
             print("Goodbye")
             sys.exit()
 
-        
+        if command == 'g':
+            print(generate_password())

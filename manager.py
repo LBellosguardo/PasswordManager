@@ -1,10 +1,12 @@
-import sys
 import random
 import string
+import sqlite3
+import sys
+from getpass import getpass
 
 MASTER = '123'
 
-connect = input('Please enter your master password or q to quit\n')
+connect = getpass('Please enter your master password or q to quit\n')
 
 #If password entry does not match, keep prompting user for master password, or quit
 while connect != MASTER:
@@ -22,7 +24,26 @@ def generate_password(length=16, special=True):
         password += random.choice(characters)
     return password
 
+#Establishes connection to database and catches any errors with connection
+def create_connection(db_file):
+    conn = None
+    try:
+        conn = sqlite3.connect(db_file)
+        return conn
+    except Error as e:
+        print(e)
+    return conn
+
 if connect == MASTER:
+    
+    conn = create_connection('password_manager.db')
+    c = conn.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS passwords (
+            service text PRIMARY KEY,
+            username text,
+            password text
+            );''')
+        
     # Main menu loop
     while True:
         

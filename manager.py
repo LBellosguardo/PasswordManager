@@ -5,6 +5,7 @@ import sqlite3
 import sys
 from cryptography.fernet import Fernet
 from getpass import getpass
+from time import sleep
 
 MASTER = '123'
 
@@ -32,7 +33,7 @@ def create_connection(db_file):
     try:
         conn = sqlite3.connect(db_file)
         return conn
-    except Error as e:
+    except sqlite3.Error as e:
         print(e)
     return conn
 
@@ -64,6 +65,7 @@ if connect == MASTER:
         
         if command == 'q':
             print("Goodbye")
+            conn.close()
             sys.exit()
 
         if command == 'a':
@@ -87,6 +89,27 @@ if connect == MASTER:
                 if pw == pw2:
                     c.execute("INSERT INTO passwords VALUES (?, ?, ?)", (service, dbe.encrypt(service, u_name), dbe.encrypt(service, pw)))
             conn.commit()
+        
+        if command == 'r':
+            print('Services:')
+            c.execute('SELECT service FROM passwords ORDER BY service')
+            print(c.fetchall())
+            service = input('Which service would you like to retrieve information for?\n')
+            
+            c.execute('SELECT * FROM passwords WHERE service == ?', (service.lower(),))
+            result = c.fetchone()
+            if result != None:    
+                user = dbe.decrypt(service, result[1])
+                password = dbe.decrypt(service, result[2])
+                print(f'Username: {user}')
+                print(f'Password: {password}')
+                choice = input("Press 'm' to return to the main menu\n").lower()
+                while choice != 'm':
+                    choice = input("Press 'm' to return to the main menu\n").lower()
+                        
+            else:
+                print(f'No entry for {service} was found')
+                sleep(3)
             
         if command == 'g':
             print(generate_password())

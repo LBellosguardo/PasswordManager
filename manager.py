@@ -94,9 +94,9 @@ if connect == MASTER:
             print('Services:')
             c.execute('SELECT service FROM passwords ORDER BY service')
             print(c.fetchall())
-            service = input('Which service would you like to retrieve information for?\n')
+            service = input('Which service would you like to retrieve information for?\n').lower()
             
-            c.execute('SELECT * FROM passwords WHERE service == ?', (service.lower(),))
+            c.execute('SELECT * FROM passwords WHERE service == ?', (service,))
             result = c.fetchone()
             if result != None:    
                 user = dbe.decrypt(service, result[1])
@@ -110,6 +110,28 @@ if connect == MASTER:
             else:
                 print(f'No entry for {service} was found')
                 sleep(3)
+        
+        if command == 'd':
+            print('Services:')
+            c.execute('SELECT service FROM passwords ORDER BY service')
+            print(c.fetchall())
+            service = input('Which service would you like to delete the information for?\n').lower()
             
+            c.execute('SELECT * FROM passwords WHERE service == ?', (service,))
+            result = c.fetchone()
+            if result != None:
+                confirm = getpass(f"Are you sure you want to delete the entry for {service}?" 
+                                 + "This cannot be undone.\n Enter your master password to proceed\n")
+                if confirm == MASTER:
+                    c.execute('DELETE FROM passwords WHERE service = ?', (service,))
+                    print(f'Entry for {service} successfully deleted. Returning to main menu...')
+                    sleep(3)
+                else:
+                    print('Master password does not match. Returning to main menu...')
+                    sleep(3)
+            else:
+                print(f"No entry for {service} was found. Returning to main menu...")
+                sleep(3)
+                    
         if command == 'g':
             print(generate_password())

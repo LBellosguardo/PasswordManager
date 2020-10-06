@@ -1,4 +1,6 @@
 import dbencrypt as dbe
+import os
+import pyperclip
 import random
 import string
 import sqlite3
@@ -7,25 +9,29 @@ from cryptography.fernet import Fernet
 from getpass import getpass
 from time import sleep
 
-MASTER = '123'
+MASTER = os.environ.get('PM_MASTER')
 
-connect = getpass('Please enter your master password or q to quit\n')
+connect = getpass("Please enter your master password or 'q' to quit\n")
 
 #If password entry does not match, keep prompting user for master password, or quit
 while connect != MASTER:
-    if connect.lower() == 'q' or connect.lower() == 'quit':
+    if connect.lower() == 'q':
         print("Goodbye")
         sys.exit()
-    connect = input('Please enter your master password or q to quit\n')
+    connect = getpass("Please enter your master password or 'q' to quit\n")
     
-def generate_password(length=16, special=True):
+def generate_password():
     password = ""
-    characters = string.ascii_letters + string.digits
-    if special:
-        characters += '!@#$%^&*'
-    for i in range(length):
+    characters = string.ascii_letters + string.digits + '!@#$%^&*'
+
+    for i in range(16):
         password += random.choice(characters)
     return password
+
+def return_to_main():
+    key = input("Press 'm' to return to the main menu\n")
+    while key != 'm':
+        key = input("Press 'm' to return to the main menu\n")
 
 #Establishes connection to database and catches any errors with connection
 def create_connection(db_file):
@@ -51,17 +57,17 @@ def retrieve_password(conn, cursor):
         password = dbe.decrypt(service, result[2])
         print(f'Username: {user}')
         print(f'Password: {password}')
-        choice = input("Press 'm' to return to the main menu\n").lower()
-        while choice != 'm':
-            choice = input("Press 'm' to return to the main menu\n").lower()
-                
+        pyperclip.copy(password)
+        print('Your password has been copied to your clipboard')
+        sleep(1)
+        return_to_main()   
     else:
         print(f'No entry for {service} was found')
         sleep(3)
 
 def add_password(conn, cursor):
     
-    service = input('What is the name of the website or service?\n')
+    service = input('What is the name of the website or service?\n').lower()
     u_name = input(f'What is your {service} username? (This can also be your email)\n')
     choice = input('Would you like a password to be automatically generated for you? (y/n)\n')
     if choice == 'y':
@@ -81,6 +87,7 @@ def add_password(conn, cursor):
         if pw == pw2:
             cursor.execute("INSERT INTO passwords VALUES (?, ?, ?)", (service, dbe.encrypt(service, u_name), dbe.encrypt(service, pw)))
     conn.commit()
+    return_to_main()
     
 def delete_password(conn, cursor):
         print('Services:')
@@ -95,8 +102,8 @@ def delete_password(conn, cursor):
                                 + "This cannot be undone.\nEnter your master password to proceed\n")
             if confirm == MASTER:
                 cursor.execute('DELETE FROM passwords WHERE service = ?', (service,))
-                print(f'Entry for {service} successfully deleted. Returning to main menu...')
-                sleep(3)
+                print(f'Entry for {service} successfully deleted.')
+                return_to_main()
             else:
                 print('Master password does not match. Returning to main menu...')
                 sleep(3)
@@ -105,7 +112,47 @@ def delete_password(conn, cursor):
             sleep(3)
         
         conn.commit()
+ 
+def update_password(conn, cursor):
+    print('Services:')
+    cursor.execute('SELECT service FROM passwords ORDER BY service')
+    print(cursor.fetchall())
+    service = input('Which service would you like to update information for?\n').lower() 
     
+    cursor.execute('SELECT * FROM passwords WHERE service == ?', (service,))
+    result = cursor.fetchone()
+    if result != None:
+        uname_select = input('Would you like to update your username information? (y/n)\n')
+        if uname_select == 'y':
+            new_uname = input(f'Please enter your updated username for {service}:\n')
+            cursor.execute('''UPDATE passwords
+                              SET username = ?
+                              WHERE service = ?''', (dbe.encrypt(service, new_uname), service))
+        password_select = input('Would you like to update your password? (y/n)\n')
+        if password_select == 'y':
+            choice = input('Would you like a password to be automatically generated for you? (y/n)\n')
+            if choice == 'y':
+                pw = generate_password()
+                cursor.execute('''UPDATE passwords
+                                  SET password = ?
+                                  WHERE service = ?''', (dbe.encrypt(service, pw) , service))
+                print(f'Your updated generated password is: {pw}\nIt has been encrypted and saved to your vault.')
+                return_to_main()
+            else:
+                pw, pw2 = 'abc', 'xyz'
+                while pw != pw2:
+                    # Have user enter password twice to ensure their entry is correct
+                    pw = getpass('Please enter your desired password:\n')
+                    pw2 = getpass('Please confirm password:\n')
+                    if pw == 'm' or pw2 == 'm':
+                        break
+                    if pw != pw2:
+                        print('Passwords did not match, please try again, or press m for main menu')
+                if pw == pw2:
+                    cursor.execute('''UPDATE passwords
+                                      SET password = ?
+                                      WHERE service = ?''', (dbe.encrypt(service, pw), service))
+            
 if connect == MASTER:
     
     conn = create_connection('password_manager.db')
@@ -145,6 +192,15 @@ if connect == MASTER:
         
         if command == 'd':
             delete_password(conn, c)      
-              
+          
+        if command == 'u':
+            update_password(conn, c)
+                
         if command == 'g':
-            print(generate_password())
+            pw = generate_password()
+            pyperclip.copy(pw)
+            print('Generated password: ' + pw)
+            print('Your generated password has been copied to your clipboard')
+            return_to_main()
+            
+            

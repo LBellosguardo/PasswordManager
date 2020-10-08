@@ -46,24 +46,27 @@ def create_connection(db_file):
     try:
         conn = sqlite3.connect(db_file)
         return conn
-    except sqlite3.Error as e:
+    except sqlite3.Error as e:      # Catch any connectivity errors
         print(e)
     return conn
 
+# Neatly formats list of all services stored in database and lists the out for the user
 def show_services(conn, cursor):
     print('\nServices:')
     cursor.execute('SELECT service FROM passwords ORDER BY service')
     res = cursor.fetchall()
     for line in res:
         print (' - ' + line[0])
-        
+
+# Get username and password for a service from the database        
 def retrieve_password(conn, cursor):
     show_services(conn, cursor)
     service = input('Which service would you like to retrieve information for?\n').lower()
     
     cursor.execute('SELECT * FROM passwords WHERE service == ?', (service,))
     result = cursor.fetchone()
-    if result != None:    
+    if result != None:
+        # Get username and password from the result for the service and decrypt them before listing them    
         user = dbe.decrypt(service, result[1])
         password = dbe.decrypt(service, result[2])
         print(f'Username: {user}')
@@ -76,11 +79,13 @@ def retrieve_password(conn, cursor):
         print(f'No entry for {service} was found')
         return_to_main()
 
+# Add a username and password for a service to the database
 def add_password(conn, cursor):
     
     service = input('What is the name of the website or service?\n').lower()
     u_name = input(f'What is your {service} username? (This can also be your email)\n')
     choice = input('Would you like a password to be automatically generated for you? (y/n)\n')
+    # Case where user wants to make use of secure password generator
     if choice == 'y':
         pw = generate_password()
         cursor.execute("INSERT INTO passwords VALUES (?, ?, ?)", (service, dbe.encrypt(service, u_name), dbe.encrypt(service, pw)))
@@ -88,16 +93,19 @@ def add_password(conn, cursor):
         print(f'Your newly generated password is: {pw}\nIt has been encrypted and saved to your vault.')
         sleep(1)
         print(f'Your password has been copied to your clipboard. Make sure you update it for your {service} account')
+    # Otherwise have user enter password and confirm it a second time
     else:
         pw, pw2 = 'abc', 'xyz'
         while pw != pw2:
             # Have user enter password twice to ensure their entry is correct
             pw = getpass('Please enter your desired password:\n')
-            pw2 = getpass('Please confirm password:\n')
-            if pw == 'm' or pw2 == 'm':
+            if pw == 'm':
+                print('Password addition cancelled')
                 break
+            pw2 = getpass('Please confirm password:\n')
             if pw != pw2:
                 print('Passwords did not match, please try again, or press m for main menu')
+        # If entries match, add info to database and copy to clipboard.
         if pw == pw2:
             cursor.execute("INSERT INTO passwords VALUES (?, ?, ?)", (service, dbe.encrypt(service, u_name), dbe.encrypt(service, pw)))
             pyperclip.copy(pw)
@@ -106,7 +114,8 @@ def add_password(conn, cursor):
             print(f'Your password has been copied to your clipboard. Make sure you update it for your {service} account')
     conn.commit()
     return_to_main()
-    
+
+# Deletes the entry for a service from the database    
 def delete_password(conn, cursor):
         show_services(conn, cursor)
         service = input('Which service would you like to delete the information for?\n').lower()
@@ -114,6 +123,7 @@ def delete_password(conn, cursor):
         cursor.execute('SELECT * FROM passwords WHERE service == ?', (service,))
         result = cursor.fetchone()
         if result != None:
+            # Confirm deletion by requesting master password again (in case program left open and someone else has access)
             confirm = getpass(f"Are you sure you want to delete the entry for {service}? " 
                                 + "This cannot be undone.\nEnter your master password to proceed\n")
             if confirm == MASTER:
@@ -129,6 +139,7 @@ def delete_password(conn, cursor):
         
         conn.commit()
  
+# Allows user to update username and/or password for a service
 def update_password(conn, cursor):
     show_services(conn, cursor)
     service = input('Which service would you like to update information for?\n').lower() 
@@ -137,12 +148,14 @@ def update_password(conn, cursor):
     result = cursor.fetchone()
     if result != None:
         uname_select = input('Would you like to update your username information? (y/n)\n')
+        # Case where user wants to update their username information
         if uname_select == 'y':
             new_uname = input(f'Please enter your updated username for {service}:\n')
             cursor.execute('''UPDATE passwords
                               SET username = ?
                               WHERE service = ?''', (dbe.encrypt(service, new_uname), service))
         password_select = input('Would you like to update your password? (y/n)\n')
+        # Case where user wants to update their password information. Choice of random pw or their own
         if password_select == 'y':
             choice = input('Would you like a password to be automatically generated for you? (y/n)\n')
             if choice == 'y':
@@ -158,9 +171,10 @@ def update_password(conn, cursor):
                 while pw != pw2:
                     # Have user enter password twice to ensure their entry is correct
                     pw = getpass('Please enter your desired password:\n')
-                    pw2 = getpass('Please confirm password:\n')
-                    if pw == 'm' or pw2 == 'm':
+                    if pw == 'm':
+                        print('Password update cancelled')
                         break
+                    pw2 = getpass('Please confirm password:\n')
                     if pw != pw2:
                         print('Passwords did not match, please try again, or press m for main menu')
                 if pw == pw2:
@@ -179,9 +193,10 @@ def update_password(conn, cursor):
 
 # Only connect to database if connection password matches master password            
 if connect == MASTER:
-    
+    # Create db connection and cursor object
     conn = create_connection('password_manager.db')
     c = conn.cursor()
+    # If a table to store credentials not yet established, create it
     c.execute('''CREATE TABLE IF NOT EXISTS passwords (
             service text PRIMARY KEY,
             username text,

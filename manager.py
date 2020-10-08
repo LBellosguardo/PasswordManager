@@ -2,30 +2,37 @@ import dbencrypt as dbe
 import os
 import pyperclip
 import random
-import string
+import re
 import sqlite3
+import string
 import sys
 from cryptography.fernet import Fernet
 from getpass import getpass
 from time import sleep
 
+# Set password as an environment variable in .zshrc file
 MASTER = os.environ.get('PM_MASTER')
 
 connect = getpass("Please enter your master password or 'q' to quit\n")
 
-#If password entry does not match, keep prompting user for master password, or quit
+# If password entry does not match, keep prompting user for master password, or quit
 while connect != MASTER:
     if connect.lower() == 'q':
         print("Goodbye")
         sys.exit()
     connect = getpass("Please enter your master password or 'q' to quit\n")
-    
+
+# Method which generates a random 16-character password    
 def generate_password():
     password = ""
     characters = string.ascii_letters + string.digits + '!@#$%^&*'
-
+    
     for i in range(16):
         password += random.choice(characters)
+    # If password does not have an uppercase, lowercase, special character, or digit, generate a new one
+    if not bool(re.search(r'[!@#$%^&*]', password)) or (password == password.lower()) \
+                or (password == password.upper()) or not bool(re.search(r'\d', password)):
+        password = generate_password()
     return password
 
 def return_to_main():
@@ -33,7 +40,7 @@ def return_to_main():
     while key != 'm':
         key = input("Press 'm' to return to the main menu\n")
 
-#Establishes connection to database and catches any errors with connection
+# Establishes connection to database and catches any errors with connection
 def create_connection(db_file):
     conn = None
     try:
@@ -43,11 +50,15 @@ def create_connection(db_file):
         print(e)
     return conn
 
-def retrieve_password(conn, cursor):
-    
-    print('Services:')
+def show_services(conn, cursor):
+    print('\nServices:')
     cursor.execute('SELECT service FROM passwords ORDER BY service')
-    print(cursor.fetchall())
+    res = cursor.fetchall()
+    for line in res:
+        print (' - ' + line[0])
+        
+def retrieve_password(conn, cursor):
+    show_services(conn, cursor)
     service = input('Which service would you like to retrieve information for?\n').lower()
     
     cursor.execute('SELECT * FROM passwords WHERE service == ?', (service,))
@@ -63,7 +74,7 @@ def retrieve_password(conn, cursor):
         return_to_main()   
     else:
         print(f'No entry for {service} was found')
-        sleep(3)
+        return_to_main()
 
 def add_password(conn, cursor):
     
@@ -90,9 +101,7 @@ def add_password(conn, cursor):
     return_to_main()
     
 def delete_password(conn, cursor):
-        print('Services:')
-        cursor.execute('SELECT service FROM passwords ORDER BY service')
-        print(cursor.fetchall())
+        show_services(conn, cursor)
         service = input('Which service would you like to delete the information for?\n').lower()
         
         cursor.execute('SELECT * FROM passwords WHERE service == ?', (service,))
@@ -108,15 +117,13 @@ def delete_password(conn, cursor):
                 print('Master password does not match. Returning to main menu...')
                 sleep(3)
         else:
-            print(f"No entry for {service} was found. Returning to main menu...")
-            sleep(3)
+            print(f"No entry for {service} was found.")
+            return_to_main()
         
         conn.commit()
  
 def update_password(conn, cursor):
-    print('Services:')
-    cursor.execute('SELECT service FROM passwords ORDER BY service')
-    print(cursor.fetchall())
+    show_services(conn, cursor)
     service = input('Which service would you like to update information for?\n').lower() 
     
     cursor.execute('SELECT * FROM passwords WHERE service == ?', (service,))
@@ -152,7 +159,12 @@ def update_password(conn, cursor):
                     cursor.execute('''UPDATE passwords
                                       SET password = ?
                                       WHERE service = ?''', (dbe.encrypt(service, pw), service))
+    else:
+        print(f"No entry for {service} was found.")
+        return_to_main()
             
+
+# Only connect to database if connection password matches master password            
 if connect == MASTER:
     
     conn = create_connection('password_manager.db')
@@ -173,7 +185,6 @@ if connect == MASTER:
         print("u: Update an existing entry (username, password, or both)")
         print('d: Delete the information for a particular service')
         print("g: Generate a new secure password (does not save this password for now)")
-        print("c: Change your master password (maybe, idk if this feature will stay)")
         print("q: Quit the password manager")
         print('-' * 15)
         

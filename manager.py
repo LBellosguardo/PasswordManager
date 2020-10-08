@@ -84,7 +84,10 @@ def add_password(conn, cursor):
     if choice == 'y':
         pw = generate_password()
         cursor.execute("INSERT INTO passwords VALUES (?, ?, ?)", (service, dbe.encrypt(service, u_name), dbe.encrypt(service, pw)))
+        pyperclip.copy(pw)
         print(f'Your newly generated password is: {pw}\nIt has been encrypted and saved to your vault.')
+        sleep(1)
+        print(f'Your password has been copied to your clipboard. Make sure you update it for your {service} account')
     else:
         pw, pw2 = 'abc', 'xyz'
         while pw != pw2:
@@ -97,6 +100,10 @@ def add_password(conn, cursor):
                 print('Passwords did not match, please try again, or press m for main menu')
         if pw == pw2:
             cursor.execute("INSERT INTO passwords VALUES (?, ?, ?)", (service, dbe.encrypt(service, u_name), dbe.encrypt(service, pw)))
+            pyperclip.copy(pw)
+            print(f'Your password has been successfully encrypted and saved to your vault.')
+            sleep(1)
+            print(f'Your password has been copied to your clipboard. Make sure you update it for your {service} account')
     conn.commit()
     return_to_main()
     
@@ -143,8 +150,9 @@ def update_password(conn, cursor):
                 cursor.execute('''UPDATE passwords
                                   SET password = ?
                                   WHERE service = ?''', (dbe.encrypt(service, pw) , service))
-                print(f'Your updated generated password is: {pw}\nIt has been encrypted and saved to your vault.')
-                return_to_main()
+                pyperclip.copy(pw)
+                print(f'Your updated generated password is: {pw}\nIt has been copied to your clipboard, encrypted and saved to your vault.')
+                
             else:
                 pw, pw2 = 'abc', 'xyz'
                 while pw != pw2:
@@ -159,6 +167,11 @@ def update_password(conn, cursor):
                     cursor.execute('''UPDATE passwords
                                       SET password = ?
                                       WHERE service = ?''', (dbe.encrypt(service, pw), service))
+                    pyperclip.copy(pw)
+                    print("Your password has been successfully copied to your clipboard, encrypted, and saved in your vault.")
+       
+        print(f"Don't forget to update your new information in your {service} account")
+        return_to_main()
     else:
         print(f"No entry for {service} was found.")
         return_to_main()

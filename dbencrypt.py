@@ -12,7 +12,7 @@ def generate_key(service):
     # To create your own unique salt, run the following two lines of code once in a separate file and copy the result
     # import os
     # print(os.urandom(16))
-    salt = b'W\xeb/\xe7\xf4\xcfau\xdb\x11\xee\xff\xf0$4$'
+    salt = ''
 
     kdf = PBKDF2HMAC(algorithm=hashes.SHA256(),
                     length=32,

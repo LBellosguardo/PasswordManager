@@ -9,8 +9,8 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 def generate_key(service):
 
     password = service.encode()
-    # If empty, paste the salt generated when running setup.py
-    salt = ''
+    # If None, paste the salt generated when running setup.py
+    salt = None
 
     kdf = PBKDF2HMAC(algorithm=hashes.SHA256(),
                     length=32,

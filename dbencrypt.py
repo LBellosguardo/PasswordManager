@@ -9,9 +9,7 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 def generate_key(service):
 
     password = service.encode()
-    # To create your own unique salt, run the following two lines of code once in a separate file and copy the result
-    # import os
-    # print(os.urandom(16))
+    # If empty, paste the salt generated when running setup.py
     salt = ''
 
     kdf = PBKDF2HMAC(algorithm=hashes.SHA256(),

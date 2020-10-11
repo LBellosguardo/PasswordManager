@@ -17,7 +17,7 @@ if 'PM_MASTER' not in os.environ:
         sys.exit()
 
     print(os.urandom(16))
-    print('Copy the above byte string into the empty salt variable in dbencrypt.py')
+    print('Copy and paste the above byte string into the empty salt variable in dbencrypt.py line 15')
 
 else:
     print('Password manager has already been set up')

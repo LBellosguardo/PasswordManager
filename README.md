@@ -35,3 +35,7 @@ password manager. It will then generate a random encryption salt which you muct 
 ![](https://github.com/LBellosguardo/ProjectDemos/blob/main/Deletepass.gif)
 ### Generate a New Secure Password:
 ![](https://github.com/LBellosguardo/ProjectDemos/blob/main/Generatepass.gif)
+
+## Outstanding Issues:
+
+setup.py Only configured for MacOS. Windows and Linux systems currently must add environment variable manually

@@ -10,7 +10,7 @@ from cryptography.fernet import Fernet
 from getpass import getpass
 from time import sleep
 
-# Set password as an environment variable in .zshrc file
+# Get password from environment variable in .zshrc file
 MASTER = os.environ.get('PM_MASTER')
 
 connect = getpass("Please enter your master password or 'q' to quit\n")

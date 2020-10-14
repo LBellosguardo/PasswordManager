@@ -5,18 +5,6 @@ This is an offline password manager which holds your username and password crede
 All data is encrypted when entered and decrypted when retrieved. This project was made for educational purposes and is not meant to compete with
 professional grade password management software. There is currently no GUI component and runs on the user's terminal / command line.. Make
 
-## Demos
-
-### Adding a New Service:
-
-### Retrieving the Information for a Service:
-
-### Updating the Credentials for a Service:
-
-### Deleting the Entry for a Service:
-
-### Generate a New Secure Password:
-
 ## How to Install
 1. Download/clone the source code into the desired directory of your machine
 2. Create a virtual environment for this project (named 'venv' by convention). In your current directory, run ```virtualenv venv```
@@ -34,3 +22,20 @@ password manager. It will then generate a random encryption salt which you muct 
   
 6. Make sure to close any terminal sessions / code editors so that the new environment variable can be saved and recognized in a new session
 7. Now you are ready to run `python manager.py` using your newly created master password. Make sure your virtual environment is activated.
+
+## Demos
+
+### Adding a New Service:
+![](https://github.com/LBellosguardo/ProjectDemos/blob/main/Addpass.gif)
+### Retrieving the Information for a Service:
+![](https://github.com/LBellosguardo/ProjectDemos/blob/main/Retrievepass.gif)
+### Updating the Credentials for a Service:
+![](https://github.com/LBellosguardo/ProjectDemos/blob/main/Updatepass.gif)
+### Deleting the Entry for a Service:
+![](https://github.com/LBellosguardo/ProjectDemos/blob/main/Deletepass.gif)
+### Generate a New Secure Password:
+![](https://github.com/LBellosguardo/ProjectDemos/blob/main/Generatepass.gif)
+
+## Outstanding Issues:
+
+setup.py Only configured for MacOS. Windows and Linux systems currently must add environment variable manually

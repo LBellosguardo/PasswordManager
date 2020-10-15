@@ -3,7 +3,7 @@
 ## About
 This is an offline password manager which holds your username and password credentials for any number of services on a local database.
 All data is encrypted when entered and decrypted when retrieved. This project was made for educational purposes and is not meant to compete with
-professional grade password management software. There is currently no GUI component and runs on the user's terminal / command line.. Make
+professional grade password management software. There is currently no GUI component and runs on the user's terminal / command line.
 
 ## How to Install
 1. Download/clone the source code into the desired directory of your machine

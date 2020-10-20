@@ -38,4 +38,4 @@ password manager. It will then generate a random encryption salt which you muct 
 
 ## Outstanding Issues:
 
-setup.py Only configured for MacOS. Windows and Linux systems currently must add environment variable manually
+setup.py Only configured for MacOS. Windows and Linux systems currently must add environment variable manually.

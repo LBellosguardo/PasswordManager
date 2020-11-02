@@ -1,4 +1,4 @@
-# PasswordManager 
+# Password Manager 
 
 ## About
 This is an offline password manager which holds your username and password credentials for any number of services on a local database.
